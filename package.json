@@ -1,0 +1,71 @@
+{
+  "name": "dsh-minimal-first-turn",
+  "version": "0.1.0",
+  "description": "Minimal first-turn conditioning for DeepSeek Harness Web sessions, with a persistent UI toggle.",
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "cordis",
+    "agent",
+    "prompt",
+    "tools"
+  ],
+  "license": "MIT",
+  "author": "ZRui-C",
+  "type": "module",
+  "main": "./src/host.mjs",
+  "exports": {
+    ".": "./src/host.mjs",
+    "./client": "./src/client.cjs",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src/",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZRui-C/dsh-minimal-first-turn.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ZRui-C/dsh-minimal-first-turn/issues"
+  },
+  "homepage": "https://github.com/ZRui-C/dsh-minimal-first-turn#readme",
+  "peerDependencies": {
+    "@deepseek-ai/dsh-fs-local": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-terminal": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-terminal-bash": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-tool-bash-persistent": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-tool-str-replace-editor": "0.1.0-rc.6"
+  },
+  "devDependencies": {
+    "@deepseek-ai/dsh-fs-local": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-terminal": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-terminal-bash": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-tool-bash-persistent": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-tool-str-replace-editor": "0.1.0-rc.6"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [],
+      "immediately": true
+    }
+  },
+  "scripts": {
+    "check": "node --check src/client.cjs && node --input-type=module -e \"import('./src/host.mjs')\"",
+    "pack:dry-run": "npm pack --dry-run"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
