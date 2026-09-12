@@ -10,6 +10,10 @@ import * as strReplaceEditor from '@deepseek-ai/dsh-tool-str-replace-editor'
 
 const PLUGIN_ID = 'dsh-minimal-first-turn'
 const BOOTSTRAP_TOOLS = new Set(['bash', 'str_replace_editor'])
+// How many leading turns the Minimal conditioning owns. The session's *first
+// turn* is conditioned as a whole — every step it takes and every tool it calls,
+// however many that is — and the next user round gets the selected preset back.
+const MINIMAL_TURNS = 1
 const SUPPRESSED_SOURCES = new Set(['agent-instructions', 'skill-catalog'])
 const MINIMAL_PERSONA = 'You are a helpful software engineer assistant.'
 const BASH_TIMEOUT_MS = 300_000
@@ -65,25 +69,20 @@ function durableEvents(session) {
 }
 
 /**
- * Fold the bootstrap phase from durable events: a `compaction/end` opens a new
- * boundary, and the first `tool/call` or `assistant/message` after it promotes
- * the session. Resume and reload therefore preserve the phase.
+ * Fold the bootstrap phase from durable events: the phase is promoted as soon as
+ * a turn beyond {@link MINIMAL_TURNS} opens, so the whole first turn stays
+ * minimal and the handover happens exactly when the next user round begins.
+ * Because `turn/start` is appended before that turn's first step is assembled,
+ * resume, reload and compaction all preserve the phase.
  * @param session - the agent's live session.
- * @returns the boundary sequence and whether the phase is promoted.
+ * @returns whether the session has left its conditioned turns.
  */
 function phaseFromEvents(session) {
-  let boundary = -1
-  let promoted = false
   for (const event of durableEvents(session)) {
-    const seq = event.seq ?? 0
-    if (event.type === 'compaction/end') {
-      boundary = seq
-      promoted = false
-    } else if ((event.type === 'tool/call' || event.type === 'assistant/message') && seq > boundary) {
-      promoted = true
-    }
+    if (event.type !== 'turn/start') continue
+    if (Number(event.data?.turn ?? 1) > MINIMAL_TURNS) return { promoted: true }
   }
-  return { boundary, promoted }
+  return { promoted: false }
 }
 
 function createBootstrapPairPlugin() {
@@ -145,12 +144,20 @@ export function apply(ctx) {
 
   const isSubagent = (agent) => (agent.session?.header?.delegationDepth ?? 0) > 0
 
+  /** The live agent owning a durable event's session, if it is still registered. */
+  const agentForSession = (session) => {
+    for (const agent of ctx.agents.list()) {
+      if (agent.session?.id === session.id) return agent
+    }
+    return undefined
+  }
+
   const phaseFor = (agent) => {
-    if (agent === undefined || agent.session === undefined) return { boundary: -1, promoted: true }
+    if (agent === undefined || agent.session === undefined) return { promoted: true }
     const id = agent.session.id
     const existing = phases.get(id)
     if (existing !== undefined) return existing
-    const phase = isSubagent(agent) ? { boundary: -1, promoted: true } : phaseFromEvents(agent.session)
+    const phase = isSubagent(agent) ? { promoted: true } : phaseFromEvents(agent.session)
     phases.set(id, phase)
     return phase
   }
@@ -196,11 +203,50 @@ export function apply(ctx) {
   }
 
   /**
-   * Drop the bootstrap pair once the session no longer needs it — never while a
-   * call may still be in flight. The pair registers a persistent `bash` into
-   * the agent scope, which shadows the selected preset's own `bash`; leaving it
-   * mounted after promotion would silently swap every later request's shell and
-   * keep `str_replace_editor` in a catalog the preset never asked for.
+   * Make the mounted pair match the durable phase, from a request-time hook.
+   *
+   * This is the mount path (a session that starts conditioned needs the pair
+   * before its first assembly) and the backstop for the handover: if the pair is
+   * somehow still mounted on a promoted request, unload it before
+   * `next()` computes anything. The handover itself is anchored earlier — see
+   * {@link releaseAtTurnBoundary} — because a turn's catalog is collected before
+   * this waterfall runs at all.
+   * @param agent - the agent whose catalog is about to be assembled.
+   * @returns the live mount while the session is still conditioned, else undefined.
+   */
+  const reconcilePair = async (agent) => {
+    if (needsBootstrap(agent)) {
+      const mount = mountPair(agent)
+      if (mount !== undefined && !mount.ready && !mount.failed) await mount.promise
+      return mount
+    }
+    const mount = mounts.get(agent)
+    if (mount !== undefined) await unmountPair(agent, mount)
+    return undefined
+  }
+
+  /**
+   * Unload the pair ahead of the handover.
+   *
+   * The next turn's catalog is collected *before* `agent/pre-step` and
+   * `system-prompt/assemble` run, so unloading from either of those is too late:
+   * the promoted turn would still be assembled with the agent-scoped persistent
+   * `bash` shadowing the preset's own shell and with `str_replace_editor` in the
+   * catalog. `agent/turn-stopping` is dispatched (and awaited) while the last
+   * conditioned turn closes, which is the last boundary before that assembly.
+   * @param agent - the agent whose conditioned turn is closing.
+   */
+  const releaseAtTurnBoundary = async (agent) => {
+    const mount = mounts.get(agent)
+    if (mount === undefined) return
+    await unmountPair(agent, mount)
+  }
+
+  /**
+   * Drop the bootstrap pair once the session no longer needs it. Never runs
+   * while the session is still conditioned; the common handover is already done
+   * by {@link releaseAtTurnBoundary} or {@link reconcilePair}, and this remains
+   * the eager path for a toggle that is switched off while the agent is idle.
    */
   const releaseWhenIdle = (agent) => {
     if (needsBootstrap(agent)) return
@@ -251,22 +297,37 @@ export function apply(ctx) {
 
   ctx.on('session/event', (session, event) => {
     const phase = phases.get(session.id)
-    if (phase === undefined) return
-    const seq = event.seq ?? 0
-    if (event.type === 'compaction/end') {
-      phases.set(session.id, { boundary: seq, promoted: false })
-    } else if (!phase.promoted && (event.type === 'tool/call' || event.type === 'assistant/message') && seq > phase.boundary) {
-      phases.set(session.id, { ...phase, promoted: true })
+    if (phase === undefined || phase.promoted) return
+    if (event.type === 'turn/start') {
+      // Appended before this turn's first step is assembled, so the handover is
+      // in place for the very request that opens the next user round.
+      if (Number(event.data?.turn ?? 1) <= MINIMAL_TURNS) return
+      phases.set(session.id, { promoted: true })
+      return
     }
+    // A conditioned turn that closes without a stop boundary (abort, error)
+    // still ends the conditioning: start the unload as early as we can. The
+    // awaited path is `agent/turn-stopping` below.
+    if (event.type !== 'turn/end' || Number(event.data?.turn ?? 1) > MINIMAL_TURNS) return
+    const agent = agentForSession(session)
+    if (agent !== undefined) void releaseAtTurnBoundary(agent).catch(() => {})
+  })
+
+  // The awaited handover. `agent/turn-stopping` is dispatched with `serial` mode
+  // while the last conditioned turn closes, and the loop waits for it — so the
+  // pair is gone before that turn's `turn/end` and well before the next turn's
+  // catalog is collected. If queued next-step input continues the same turn
+  // instead, the remaining steps simply assemble without the pair (the missing
+  // bootstrap tools fall back to the selected preset, as logged).
+  ctx.on('agent/turn-stopping', async ({ agent, turn }) => {
+    if (turn > MINIMAL_TURNS) return
+    await releaseAtTurnBoundary(agent)
   })
 
   ctx.on('agent/pre-step', async ({ agent }, next) => {
-    const mount = needsBootstrap(agent) ? mountPair(agent) : undefined
-    if (mount !== undefined && !mount.ready && !mount.failed) await mount.promise
-    releaseWhenIdle(agent)
-
+    const mount = await reconcilePair(agent)
     const decision = await next()
-    if (!needsBootstrap(agent) || mount?.ready !== true) return decision
+    if (mount?.ready !== true || !needsBootstrap(agent)) return decision
     if (!Array.isArray(decision.messages)) return decision
 
     const messages = decision.messages.filter((message) => !SUPPRESSED_SOURCES.has(message?.source?.kind))
@@ -274,15 +335,11 @@ export function apply(ctx) {
   }, { prepend: true })
 
   ctx.on('system-prompt/assemble', async (_assembly, context, next) => {
-    const assembled = await next()
-    if (!enabled) return assembled
-
     const agent = context.agent
-    if (agent === undefined) return assembled
+    if (agent === undefined) return next()
 
-    const mount = needsBootstrap(agent) ? mountPair(agent) : undefined
-    if (mount !== undefined && !mount.ready && !mount.failed) await mount.promise
-    releaseWhenIdle(agent)
+    const mount = await reconcilePair(agent)
+    const assembled = await next()
     if (mount?.ready !== true || !needsBootstrap(agent)) return assembled
 
     const available = new Set(assembled.tools.map((tool) => tool.name))

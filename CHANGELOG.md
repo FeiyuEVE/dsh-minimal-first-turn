@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.2.0 - 2026-09-13
+
+- Condition the whole **first turn** instead of the first request: the Minimal
+  prompt and the two-tool catalog now cover every step and tool call of turn 1,
+  and the selected preset is injected when the next user round opens.
+- Derive the phase from `turn/start` events instead of the first `tool/call` or
+  `assistant/message`, so the handover is tied to the conversation round rather
+  than to a tool-call counter. A session that has left turn 1 is never
+  re-conditioned, including after `compaction/end`.
+- Move the handover ahead of catalog collection: the Minimal pair is unloaded at
+  `agent/turn-stopping`, the awaited boundary that closes the conditioned turn.
+  A turn's catalog is collected before `agent/pre-step` and
+  `system-prompt/assemble`, so unloading from those left the promoted turn's
+  first request carrying the agent-scoped persistent `bash` (shadowing the
+  preset's shell) and `str_replace_editor`. Verified with a queued follow-up
+  sent mid-turn — turn 2 opens in the same driver loop — where the promoted
+  header is now the preset's own 32-tool catalog.
+- Fix the mobile composer: on narrow viewports the switch used to wrap the
+  toolbar into two rows. It is now registered in two slots and moves out of the
+  toolbar into its own row (`conversation.input.dock`) at `max-width: 767px`,
+  leaving the native tool buttons on a single row. Desktop keeps the toolbar
+  placement.
+- Tag the toggle root with its variant class (`dmft-toggle--left` /
+  `dmft-toggle--dock`), pin it to `flex: 0 0 auto; min-width: 0`, and hide the
+  inactive variant.
+
 ## 0.1.1 - 2026-09-13
 
 - Rename the package to `@feiyueve/dsh-minimal-first-turn` for the private
