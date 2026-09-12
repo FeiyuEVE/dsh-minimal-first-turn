@@ -9,13 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 11
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm check
+      # The plugin ships plain JavaScript and declares no runtime dependencies
+      # (dsh resolves every @deepseek-ai package at runtime), so there is no
+      # install step and no lockfile to cache.
+      - run: npm run check
       - run: npm pack --dry-run

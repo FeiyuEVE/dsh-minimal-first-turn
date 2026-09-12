@@ -21,7 +21,12 @@ While **First-turn minimal** is enabled:
    that request.
 4. The first durable `tool/call` or `assistant/message` restores the selected
    preset's original prompt and complete tool catalog.
-5. After `compaction/end`, the next request enters the same controlled phase.
+5. The agent-scoped Minimal tools are mounted only while the session is
+   unpromoted, and are unloaded once the agent next goes idle: the pair
+   registers a persistent `bash` under the same name as the preset's own shell,
+   so leaving it mounted would keep shadowing that shell (and keep
+   `str_replace_editor` in a catalog the preset never asked for).
+6. After `compaction/end`, the next request enters the same controlled phase.
 
 The composer contains a persistent **首轮精简** switch. It is global to the
 current DSH home, not per-session. Disabling it removes this plugin's
@@ -29,9 +34,9 @@ agent-scoped Minimal tools and stops all filtering for future requests.
 
 ## Installation
 
-This package targets DSH Web with `@deepseek-ai/*` `0.1.0-rc.6` packages.
-A persistent Bash PTY is required, so the current release supports macOS and
-Linux hosts; Windows is not supported yet.
+This package targets DSH Web with `@deepseek-ai/*` `0.1.5-rc.2-local.4`
+packages. A persistent Bash PTY is required, so the current release supports
+macOS and Linux hosts; Windows is not supported yet.
 
 ```bash
 dsh plugin --profile web add dsh-minimal-first-turn
@@ -51,10 +56,13 @@ When `DSH_HOME` is unset, the path is `~/.dsh/plugins/dsh-minimal-first-turn.jso
 ## Development
 
 ```bash
-pnpm install
-pnpm check
+npm run check          # syntax-check both halves
 npm pack --dry-run
 ```
+
+The plugin ships plain JavaScript and declares no runtime dependencies — dsh
+resolves every `@deepseek-ai` package from its own installation at runtime — so
+there is no install or build step.
 
 For a local Web profile, add the package as a dependency and mount its
 `cordis.patch.yml`, then restart `dsh web`. Host changes require a restart;
@@ -68,7 +76,9 @@ running.
 - Its behavior is intentionally limited to root sessions; subagents keep their
   original catalog.
 - The first-turn effect is derived from durable session events, so resume and
-  compaction preserve the phase correctly.
+  compaction preserve the phase correctly. The phase read prefers
+  `session.snapshotEvents()` and falls back to the removed `session.events`
+  array, so the same build runs on both harness generations.
 - DeepSeek Harness is a developer preview. Pin the supported DSH package
   versions when using this in production.
 
@@ -87,3 +97,6 @@ Minimal system prompt、持久 `bash` 与 `str_replace_editor`，并移除自动
 
 它不保证模型输出固定的推理措辞，只控制模型可见的首轮条件。开关是全局持久设置，
 而不是单个会话设置。
+
+首轮的 Minimal 工具对只在会话未 promote 时挂载；会话 promote 并进入空闲后会卸载
+（`bash` 与所选预设自己的 shell 同名，常驻会一直遮蔽预设的实现）。

@@ -1,6 +1,6 @@
 {
   "name": "dsh-minimal-first-turn",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Minimal first-turn conditioning for DeepSeek Harness Web sessions, with a persistent UI toggle.",
   "keywords": [
     "deepseek-harness",
@@ -35,18 +35,11 @@
   },
   "homepage": "https://github.com/ZRui-C/dsh-minimal-first-turn#readme",
   "peerDependencies": {
-    "@deepseek-ai/dsh-fs-local": "0.1.0-rc.6",
-    "@deepseek-ai/dsh-terminal": "0.1.0-rc.6",
-    "@deepseek-ai/dsh-terminal-bash": "0.1.0-rc.6",
-    "@deepseek-ai/dsh-tool-bash-persistent": "0.1.0-rc.6",
-    "@deepseek-ai/dsh-tool-str-replace-editor": "0.1.0-rc.6"
-  },
-  "devDependencies": {
-    "@deepseek-ai/dsh-fs-local": "0.1.0-rc.6",
-    "@deepseek-ai/dsh-terminal": "0.1.0-rc.6",
-    "@deepseek-ai/dsh-terminal-bash": "0.1.0-rc.6",
-    "@deepseek-ai/dsh-tool-bash-persistent": "0.1.0-rc.6",
-    "@deepseek-ai/dsh-tool-str-replace-editor": "0.1.0-rc.6"
+    "@deepseek-ai/dsh-fs-local": "0.1.5-rc.2-local.4",
+    "@deepseek-ai/dsh-terminal": "0.1.5-rc.2-local.4",
+    "@deepseek-ai/dsh-terminal-bash": "0.1.5-rc.2-local.4",
+    "@deepseek-ai/dsh-tool-bash-persistent": "0.1.5-rc.2-local.4",
+    "@deepseek-ai/dsh-tool-str-replace-editor": "0.1.5-rc.2-local.4"
   },
   "dsh": {
     "bundle": {
@@ -59,7 +52,7 @@
     }
   },
   "scripts": {
-    "check": "node --check src/client.cjs && node --input-type=module -e \"import('./src/host.mjs')\"",
+    "check": "node --check src/client.cjs && node --check src/host.mjs",
     "pack:dry-run": "npm pack --dry-run"
   },
   "engines": {
