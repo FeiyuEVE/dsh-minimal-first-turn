@@ -1,3 +1,3 @@
 - insert:
     - id: dsh-minimal-first-turn
-      name: dsh-minimal-first-turn
+      name: '@feiyueve/dsh-minimal-first-turn'

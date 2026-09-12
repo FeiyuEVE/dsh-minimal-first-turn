@@ -2,6 +2,8 @@
 
 ## 0.1.1 - 2026-09-13
 
+- Rename the package to `@feiyueve/dsh-minimal-first-turn` for the private
+  registry (the bundle patch and client bundle id follow).
 - Port to DeepSeek Harness `0.1.5-rc.2-local.4`; peer dependencies repinned.
 - Read durable events through `session.snapshotEvents()`, falling back to the
   removed `session.events` array (dropped in harness 0.1.3-alpha.1).

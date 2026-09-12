@@ -2,11 +2,14 @@
 
 [中文](#中文说明) | [Installation](#installation)
 
-`dsh-minimal-first-turn` is a DeepSeek Harness Web plugin that makes an enabled
-root session's first model request smaller and closer to the official Minimal
-preset, without permanently giving up the selected agent preset.
+`@feiyueve/dsh-minimal-first-turn` is a DeepSeek Harness Web plugin that makes
+an enabled root session's first model request smaller and closer to the official
+Minimal preset, without permanently giving up the selected agent preset.
 
-It is inspired by the first-request conditioning work in
+Fork of [`ZRui-C/dsh-minimal-first-turn`](https://github.com/ZRui-C/dsh-minimal-first-turn),
+ported to the local DeepSeek Harness baseline `0.1.5-rc.2-local.4` (see
+[CHANGELOG.md](CHANGELOG.md)). It is inspired by the first-request conditioning
+work in
 [`xiaobright/dsh-anchored-standard`](https://github.com/xiaobright/dsh-anchored-standard).
 This project is independent, experimental, and not affiliated with DeepSeek.
 
@@ -39,7 +42,8 @@ packages. A persistent Bash PTY is required, so the current release supports
 macOS and Linux hosts; Windows is not supported yet.
 
 ```bash
-dsh plugin --profile web add dsh-minimal-first-turn
+# from the private registry (local builds are published under the @feiyueve scope)
+dsh plugin --profile web add @feiyueve/dsh-minimal-first-turn
 ```
 
 Restart the existing `dsh web` process, then open a conversation. The
