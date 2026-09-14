@@ -1,6 +1,6 @@
 {
   "name": "@feiyueve/dsh-minimal-first-turn",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Minimal first-turn conditioning for DeepSeek Harness Web sessions, with a persistent UI toggle.",
   "keywords": [
     "deepseek-harness",
@@ -35,11 +35,11 @@
   },
   "homepage": "https://github.com/FeiyuEVE/dsh-minimal-first-turn#readme",
   "peerDependencies": {
-    "@deepseek-ai/dsh-fs-local": "0.1.5-rc.2-local.4",
-    "@deepseek-ai/dsh-terminal": "0.1.5-rc.2-local.4",
-    "@deepseek-ai/dsh-terminal-bash": "0.1.5-rc.2-local.4",
-    "@deepseek-ai/dsh-tool-bash-persistent": "0.1.5-rc.2-local.4",
-    "@deepseek-ai/dsh-tool-str-replace-editor": "0.1.5-rc.2-local.4"
+    "@deepseek-ai/dsh-fs-local": "0.1.5-rc.2-local.5",
+    "@deepseek-ai/dsh-terminal": "0.1.5-rc.2-local.5",
+    "@deepseek-ai/dsh-terminal-bash": "0.1.5-rc.2-local.5",
+    "@deepseek-ai/dsh-tool-bash-persistent": "0.1.5-rc.2-local.5",
+    "@deepseek-ai/dsh-tool-str-replace-editor": "0.1.5-rc.2-local.5"
   },
   "dsh": {
     "bundle": {

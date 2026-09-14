@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.1 - 2026-09-14
+
+- Port to DeepSeek Harness `0.1.5-rc.2-local.5`; the five `@deepseek-ai`
+  peer dependencies are repinned. No behavior change: the `local.5` delta is
+  confined to the `tool-bash` / `tool-pwsh` sandbox-escalation path, and this
+  plugin's imports (`dsh-terminal`, `dsh-terminal-bash`,
+  `dsh-tool-bash-persistent`, `dsh-fs-local`, `dsh-tool-str-replace-editor`)
+  keep their service classes, export maps, and the Minimal persistent-bash
+  description text the plugin mirrors.
+
 ## 0.2.0 - 2026-09-13
 
 - Condition the whole **first turn** instead of the first request: the Minimal

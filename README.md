@@ -7,7 +7,7 @@ an enabled root session's first turn smaller and closer to the official Minimal
 preset, without permanently giving up the selected agent preset.
 
 Fork of [`ZRui-C/dsh-minimal-first-turn`](https://github.com/ZRui-C/dsh-minimal-first-turn),
-ported to the local DeepSeek Harness baseline `0.1.5-rc.2-local.4` (see
+ported to the local DeepSeek Harness baseline `0.1.5-rc.2-local.5` (see
 [CHANGELOG.md](CHANGELOG.md)). It is inspired by the first-request conditioning
 work in
 [`xiaobright/dsh-anchored-standard`](https://github.com/xiaobright/dsh-anchored-standard).
@@ -45,7 +45,7 @@ agent-scoped Minimal tools and stops all filtering for future requests.
 
 ## Installation
 
-This package targets DSH Web with `@deepseek-ai/*` `0.1.5-rc.2-local.4`
+This package targets DSH Web with `@deepseek-ai/*` `0.1.5-rc.2-local.5`
 packages. A persistent Bash PTY is required, so the current release supports
 macOS and Linux hosts; Windows is not supported yet.
 
