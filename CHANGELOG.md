@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2 - 2026-09-16
+
+- Port to DeepSeek Harness `0.1.6-alpha.1` (local release line `0.1.6-alpha.1-local.1`): the five `@deepseek-ai` peer dependencies gain both versions. No behavior change.
+- 0.1.6 contract check: the seven subscribed events keep their names and dispatch modes (`agent/turn-stopping` byte-identical), `PromptAssembly` / `PreStepDecision` / `AssembleContext` payloads unchanged, the two composer slots keep their declarations, and the built-in Minimal persistent-bash description snapshot is identical. One semantic change is noted for verification: `agent/created` became an awaitable serial dispatch, and this plugin mounts its pair synchronously inside that callback — the first turn must still see `mount.ready === true` (asserted in the container testbed).
+
 ## 0.2.1 - 2026-09-14
 
 - Port to DeepSeek Harness `0.1.5-rc.2-local.5`; the five `@deepseek-ai`
