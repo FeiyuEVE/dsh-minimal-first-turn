@@ -1,5 +1,11 @@
 # Changelog
 
+
+## 0.2.4 - 2026-10-09
+
+- Port to DeepSeek Harness `0.2.1-alpha.1-local.1`: the five `@deepseek-ai` peer dependencies gain the local version. No behavior change.
+- Contract check: `agent/pre-step`, `PreStepDecision`, the `minimal` preset patch, and the two composer slot declarations are unchanged between `dsh-v0.1.7-alpha.2` and `dsh-v0.2.1-alpha.1`; `system-prompt/assemble` and `dsh-host-webserver` sources are identical.
+- Verified with `npm run check` and `npm pack --dry-run` (exit 0).
 ## 0.2.2 - 2026-09-16
 
 - Port to DeepSeek Harness `0.1.6-alpha.1` (local release line `0.1.6-alpha.1-local.1`): the five `@deepseek-ai` peer dependencies gain both versions. No behavior change.
